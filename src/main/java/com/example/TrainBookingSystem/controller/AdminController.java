@@ -5,6 +5,8 @@ import com.example.TrainBookingSystem.dto.TrainDTO;
 import com.example.TrainBookingSystem.entity.Coach;
 import com.example.TrainBookingSystem.entity.Train;
 import com.example.TrainBookingSystem.service.TrainService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ public class AdminController {
 
     @PostMapping("/trains")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Save train", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Train> saveTrain(@RequestBody TrainDTO trainDTO) {
         Train savedTrain = trainService.saveTrain(trainDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedTrain);
@@ -30,6 +33,7 @@ public class AdminController {
 
     @GetMapping("/trains")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get all trains", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<TrainDTO>> getAllTrains() {
         List<TrainDTO> trains = trainService.getAllTrains();
         return ResponseEntity.ok(trains);
@@ -37,6 +41,7 @@ public class AdminController {
 
     @GetMapping("/trains/{trainName}/coaches")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "get Coaches By Train Name", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TrainCoachesDTO> getCoachesByTrainName(@PathVariable String trainName) {
         TrainCoachesDTO trainCoachesDTO = trainService.getCoachesByTrainName(trainName);
         return ResponseEntity.ok(trainCoachesDTO);
