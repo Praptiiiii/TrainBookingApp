@@ -10,11 +10,5 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TrainDTO {
-
-
     private String trainName;
-    //private List<CoachDTO> coaches; // Add this line
-
-
-
 }

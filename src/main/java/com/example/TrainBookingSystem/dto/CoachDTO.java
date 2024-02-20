@@ -13,7 +13,6 @@ public class CoachDTO {
 
     private String coachName;
     private int numberOfSeats;
-   // private List<SeatDTO> seats;
     private int seatsOccupied;
     private int seatsAvailable;
 

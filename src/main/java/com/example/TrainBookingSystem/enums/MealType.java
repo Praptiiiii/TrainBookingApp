@@ -5,5 +5,7 @@ public enum MealType {
     VEG
     ,NONVEG,
     veg,
-    nonveg
+    nonveg,
+
+    NONE,none
 }

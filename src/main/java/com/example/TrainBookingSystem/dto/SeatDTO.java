@@ -10,9 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SeatDTO {
 
-
     private String seatNumber;
-    private BerthType berthType; // Use the enum here
+    private BerthType berthType;
     private double basePrice;
     private double dynamicPrice;
     private boolean isBooked;

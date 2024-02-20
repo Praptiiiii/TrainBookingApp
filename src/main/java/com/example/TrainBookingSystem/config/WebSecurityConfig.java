@@ -26,13 +26,7 @@ public class WebSecurityConfig {
 
     private final UserServiceImpl userService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
     private final ObjectMapper objectMapper;
-
-
-
-
-
 
     /**
      * Constructs a WebSecurityConfig with the necessary dependencies.

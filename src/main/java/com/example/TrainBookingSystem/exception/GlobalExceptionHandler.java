@@ -4,7 +4,9 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -16,32 +18,6 @@ import java.util.Date;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-
-//    @ExceptionHandler(IllegalArgumentException.class)
-//    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-//    }
-//
-//    @ExceptionHandler(IllegalStateException.class)
-//    public ResponseEntity<String> handleIllegalStateException(IllegalStateException ex) {
-//        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
-//    }
-
-    // Add more exception handlers as needed for your application
-
-    // Handle generic exceptions
-//    @ExceptionHandler(Exception.class)
-//    public ResponseEntity<ErrorResponseDTO> handleException(Exception ex) {
-//        ex.printStackTrace();
-//        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
-//                .type(getCurrentEndpoint())
-//                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-//                .error(ex.getMessage())
-//                .date(new Date())
-//                .build();
-//        return new ResponseEntity<>(errorResponseDTO,HttpStatus.INTERNAL_SERVER_ERROR);
-//    }
-
 
     @ExceptionHandler({ValidationFailureException.class, IllegalArgumentException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -55,6 +31,7 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
+
 
     @ExceptionHandler({JWTExpirationException.class, ExpiredJwtException.class})
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
@@ -71,6 +48,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleAccessDeniedException(Exception ex) {
+
         ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .type(getCurrentEndpoint())
                 .status(HttpStatus.FORBIDDEN.value())
@@ -81,6 +59,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponseDTO, HttpStatus.FORBIDDEN);
     }
 
+
     // Method to get the current endpoint
     private String getCurrentEndpoint() {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
@@ -88,12 +67,23 @@ public class GlobalExceptionHandler {
         return request.getRequestURL().toString();
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ErrorResponseDTO> handleEnumsException(Exception ex) {
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .type(getCurrentEndpoint())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("The Meal Type or Berth Type is INVALID")
+                .date(new Date())
+                .build();
 
-//    private String getCurrentEndpoint() {
-//        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-//        HttpServletRequest request = attributes.getRequest();
-//        String endpoint = request.getRequestURL().toString();
-//        return endpoint;
-//    }
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
+    }
+
+
+    
+
+
+
 }
 

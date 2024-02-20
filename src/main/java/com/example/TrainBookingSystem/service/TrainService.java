@@ -12,7 +12,5 @@ public interface TrainService {
     Train saveTrain(TrainDTO trainDTO);
     List<TrainDTO> getAllTrains();
 
-    // List<Coach> getCoachesByTrainName(String trainName);
-
     TrainCoachesDTO getCoachesByTrainName(String trainName);
 }

@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,6 +31,7 @@ public class Booking {
     //private double totalPrice;
     private double totalPrice;
     private double price; // Dynamically calculated price
+
 
 
 }

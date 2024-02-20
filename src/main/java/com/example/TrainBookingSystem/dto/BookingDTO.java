@@ -15,8 +15,4 @@ public class BookingDTO {
     private String trainName;
     private BerthType[] berthPreference;
     private MealType mealPreference;
-
-
-
-
 }

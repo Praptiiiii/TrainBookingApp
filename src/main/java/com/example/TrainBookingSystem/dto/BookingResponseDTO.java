@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,4 +22,5 @@ public class BookingResponseDTO {
     private double ticketPrice;
     private MealType mealType; // Added mealType field
     private String coachName;
+    private Date timeDetails;
 }

@@ -5,6 +5,5 @@ public enum BerthType {
     UPPER,
     LOWER,
     MIDDLE,
-    upper,
-    lower,middle
+
 }

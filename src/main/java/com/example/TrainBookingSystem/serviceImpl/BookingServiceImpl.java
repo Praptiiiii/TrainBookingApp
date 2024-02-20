@@ -2,27 +2,30 @@ package com.example.TrainBookingSystem.serviceImpl;
 
 import com.example.TrainBookingSystem.dto.BookingDTO;
 import com.example.TrainBookingSystem.dto.BookingResponseDTO;
-import com.example.TrainBookingSystem.dto.SeatDTO;
 import com.example.TrainBookingSystem.entity.Booking;
 import com.example.TrainBookingSystem.entity.Coach;
 import com.example.TrainBookingSystem.entity.Seat;
 import com.example.TrainBookingSystem.entity.Train;
 import com.example.TrainBookingSystem.enums.BerthType;
+import com.example.TrainBookingSystem.enums.MealType;
 import com.example.TrainBookingSystem.repository.BookingRepository;
 import com.example.TrainBookingSystem.repository.CoachRepository;
 import com.example.TrainBookingSystem.repository.SeatRepository;
 import com.example.TrainBookingSystem.repository.TrainRepository;
 import com.example.TrainBookingSystem.service.BookingService;
+import com.example.TrainBookingSystem.startegy.PriceCalculationStrategy;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
 public class BookingServiceImpl implements BookingService {
+
 
     @Autowired
     private BookingRepository bookingRepository;
@@ -39,50 +42,8 @@ public class BookingServiceImpl implements BookingService {
     @Autowired
     private ModelMapper modelMapper;
 
-//    @Override
-//    @Transactional
-//    public BookingDTO bookTicket(BookingDTO bookingDTO) {
-//        // Retrieve the train by its name
-//        Train train = trainRepository.findByTrainName(bookingDTO.getTrainName());
-//        if (train == null) {
-//            // Handle the case when the train is not found
-//            return null;
-//        }
-//
-//        // Logic to find available seat based on user preference and coach sequence
-//        Coach coach = findAvailableCoach(train.getId(), bookingDTO.getBerthPreference());
-//        if (coach == null) {
-//            // Handle the case when no suitable coach is available
-//            return null;
-//        }
-//
-//        // Find the first available seat in the coach based on user preference
-//        Seat seat = findAvailableSeat(coach, bookingDTO.getBerthPreference());
-//        if (seat == null) {
-//            // Handle the case when no suitable seat is available
-//            return null;
-//        }
-//
-//        // Update the seat status to booked
-//        seat.setBooked(true);
-//        //seat.setBooked(true);
-//        seat.setBasePrice(2000); // Set base price
-//        seat.setDynamicPrice(calculateDynamicPrice(coach)); // Set dynamically calculated price
-//
-//        seatRepository.save(seat);
-//
-//        // Create and save the booking
-//        Booking booking = new Booking();
-//        booking.setPassengerName(bookingDTO.getPassengerName());
-//        booking.setMealPreference(bookingDTO.getMealPreference());
-//        booking.setSeat(seat);
-//        booking.setPrice(calculateDynamicPrice(coach)); // Set dynamically calculated price
-//        booking.setTotalPrice(booking.getPrice()); // Set total price initially as price per seat
-//        booking = bookingRepository.save(booking);
-//
-//        return modelMapper.map(booking, BookingDTO.class);
-//    }
-
+    @Autowired
+    private PriceCalculationStrategy priceCalculationStrategy; // Inject the strategy
 
     @Override
     @Transactional
@@ -92,11 +53,31 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException("Passenger name must be provided.");
         }
 
+
         // Validate that none of the other fields are null or empty
-        if (bookingDTO.getTrainName() == null || bookingDTO.getTrainName().isEmpty() ||
-                bookingDTO.getBerthPreference() == null || bookingDTO.getBerthPreference().length == 0 ||
-                bookingDTO.getMealPreference() == null) {
-            throw new IllegalArgumentException("All fields in the booking request must be provided.");
+        if (bookingDTO.getTrainName() == null || bookingDTO.getTrainName().isEmpty()) {
+            throw new IllegalArgumentException("Train name must be provided.");
+        }
+
+        // Validate that the meal preference is either VEG or NON_VEG
+        MealType mealPreference = bookingDTO.getMealPreference();
+        if (mealPreference != MealType.VEG && mealPreference != MealType.NONVEG) {
+            throw new IllegalArgumentException("Please choose appropriate meal options. Options are VEG and NON_VEG only.");
+        }
+
+        // Validate that the berth preference is one of LOWER, MIDDLE, or UPPER
+        BerthType[] allowedBerthPreferences = {BerthType.LOWER, BerthType.MIDDLE, BerthType.UPPER};
+        boolean validBerthPreference = false;
+        for (BerthType berthType : bookingDTO.getBerthPreference()) {
+            for (BerthType allowedType : allowedBerthPreferences) {
+                if (berthType == allowedType) {
+                    validBerthPreference = true;
+                    break;
+                }
+            }
+            if (!validBerthPreference) {
+                throw new IllegalArgumentException("Please choose a suitable Berth Preference: LOWER, MIDDLE, or UPPER.");
+            }
         }
 
         // Convert passengerName and trainName to uppercase
@@ -127,18 +108,24 @@ public class BookingServiceImpl implements BookingService {
         // Update the seat status to booked
         seat.setBooked(true);
         seat.setBasePrice(2000); // Set base price
-        seat.setDynamicPrice(calculateDynamicPrice(coach)); // Set dynamically calculated price
+        seat.setDynamicPrice(priceCalculationStrategy.calculateDynamicPrice(coach)); // Use the injected strategy
 
         seatRepository.save(seat);
 
         // Create and save the booking
         Booking booking = new Booking();
         booking.setPassengerName(passengerName);
-        booking.setMealPreference(bookingDTO.getMealPreference());
+        booking.setMealPreference(mealPreference);
         booking.setSeat(seat);
-        booking.setPrice(calculateDynamicPrice(coach)); // Set dynamically calculated price
+        booking.setPrice(seat.getDynamicPrice()); // Set dynamically calculated price
         booking.setTotalPrice(booking.getPrice()); // Set total price initially as price per seat
         booking = bookingRepository.save(booking);
+
+        try {
+            Thread.sleep(5000); // Sleep for 5 seconds
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // Prepare the booking response DTO
         BookingResponseDTO response = new BookingResponseDTO();
@@ -149,29 +136,10 @@ public class BookingServiceImpl implements BookingService {
         response.setCoachName(seat.getCoach().getCoachName());
         response.setMealType(booking.getMealPreference());
         response.setTicketPrice(seat.getDynamicPrice());
+        response.setTimeDetails(new Date());
 
         return response;
     }
-
-
-
-
-//    @Override
-//    public SeatDTO getSeatInformation(Long bookingId) {
-//        // Retrieve booking details from the database using the bookingId
-//        Booking booking = bookingRepository.findById(bookingId).orElse(null);
-//        if (booking == null) {
-//            // Handle the case when the booking is not found
-//            return null;
-//        }
-//
-//        // Map the seat entity to SeatDTO
-//        SeatDTO seatDTO = modelMapper.map(booking.getSeat(), SeatDTO.class);
-//        // You can perform any additional processing or mapping here if needed
-//
-//        return seatDTO;
-//    }
-
 
     @Override
     public String calculateDynamicPrices() {
@@ -179,34 +147,13 @@ public class BookingServiceImpl implements BookingService {
         StringBuilder pricesBuilder = new StringBuilder();
 
         for (Coach coach : coaches) {
-            double price = calculateDynamicPrice(coach);
+            double price = priceCalculationStrategy.calculateDynamicPrice(coach); // Use the strategy
             pricesBuilder.append("Coach ").append(coach.getCoachName()).append(": Rs. ").append(price).append("\n");
         }
 
         return pricesBuilder.toString();
     }
 
-    private double calculateDynamicPrice(Coach coach) {
-        int totalSeats = coach.getSeats().size();
-        long bookedSeats = coach.getSeats().stream().filter(Seat::isBooked).count();
-        double occupancyPercentage = ((double) bookedSeats / totalSeats) * 100;
-
-        double basePrice = 2000; // Base price for every seat
-        double dynamicPrice = basePrice;
-
-        // Apply dynamic pricing rules based on occupancy percentage
-        if (occupancyPercentage >= 40) {
-            dynamicPrice += basePrice * 0.18; // 18% increase
-        } else if (occupancyPercentage >= 35) {
-            dynamicPrice += basePrice * 0.15; // 15% increase
-        } else if (occupancyPercentage >= 30) {
-            dynamicPrice += basePrice * 0.12; // 12% increase
-        } else if (occupancyPercentage >= 20) {
-            dynamicPrice += basePrice * 0.10; // 10% increase
-        }
-
-        return dynamicPrice;
-    }
 
     private Coach findAvailableCoach(Long trainId, BerthType[] berthPreference) {
         List<Coach> availableCoaches = coachRepository.findAvailableCoachesByTrainId(trainId);

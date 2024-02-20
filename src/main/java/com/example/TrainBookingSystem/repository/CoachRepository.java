@@ -15,6 +15,7 @@ public interface CoachRepository extends JpaRepository<Coach, Long> {
     List<Coach> findAvailableCoachesByTrainId(Long trainId);
     List<Coach> findByTrainId(Long trainId);
 
+
 }
 
 

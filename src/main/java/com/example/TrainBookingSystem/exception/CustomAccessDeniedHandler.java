@@ -15,13 +15,6 @@ import java.util.Date;
 
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
-//    @Override
-//    public void handle(HttpServletRequest request, HttpServletResponse response,
-//                       AccessDeniedException accessDeniedException) throws IOException, ServletException {
-//        response.setStatus(HttpStatus.FORBIDDEN.value());
-//        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-//        response.getWriter().write("{\"error\": \"" + accessDeniedException.getMessage() + "\"}");
-//    }
 
     private final ObjectMapper objectMapper;
 

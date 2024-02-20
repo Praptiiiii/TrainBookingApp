@@ -21,5 +21,8 @@ public class Train {
     @OneToMany(mappedBy = "train", cascade = CascadeType.ALL)
     private List<Coach> coaches = new ArrayList<>();
 
-    // Constructors, getters, and setters
+    public Train(String express) {
+    }
+
+
 }

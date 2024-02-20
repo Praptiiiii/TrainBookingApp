@@ -63,7 +63,6 @@ public class JwtUtilsImpl implements JwtUtils {
         return claimsResolvers.apply(claims);
     }
 
-    //TODO: convert expiryTime to constant
     private String generateAccessToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder().setClaims(extraClaims).setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
